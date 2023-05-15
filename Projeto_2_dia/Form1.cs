@@ -22,6 +22,7 @@ using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using System.Threading;
 using static System.Net.Mime.MediaTypeNames;
+using System.Diagnostics;
 
 
 namespace Projeto_2_dia
@@ -29,183 +30,46 @@ namespace Projeto_2_dia
     
     public partial class Form1 : Form
     {
-        public IWebDriver driver { get; set; }
-        public ChromeDriverService ChromeDriverService { get; set; }
-        public int cont2 = 0;
-       
-        public Form1()
-        {
-            InitializeComponent();
-            this.ChromeDriverService=ChromeDriverService.CreateDefaultService();
-            this.ChromeDriverService.HideCommandPromptWindow = true;
-        }
-        public void updatebar()
-        {
-            progressBar1.Value = cont2;
-        }
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            var options = new ChromeOptions();
-            options.AddArguments("headless");
-            driver = new ChromeDriver(ChromeDriverService, options);
-        }
-        
-       public void Buscardados(int pagina)
+        private scrapper scrape;
+
+
+        private void scrape_progresschanged(object sender, int progress)
         {
             if (progressBar1.InvokeRequired)
             {
-                Action define = delegate { progressBar1.Value = Program.listaProdutos.Count; };
-                progressBar1.Invoke(define);
-            }
-            if (pagina < 2)
-            {
-                driver.Navigate().GoToUrl("https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/");
-                var cards = driver.FindElements(By.CssSelector("[data-cy='l-card']"));
-
-
-                foreach (var card in cards)
-                {
-                    Produto P = new Produto();
-                    var nome = card.FindElement(By.TagName("h6"));
-                    P.Nome = nome.Text;
-                    var preco = card.FindElement(By.CssSelector("[data-testid='ad-price']"));
-                    P.Preco = preco.Text;
-                    var local = card.FindElement(By.CssSelector("[data-testid='location-date']"));
-                    P.Localizacao = local.Text;
-                    var link = card.FindElement(By.TagName("a"));
-                    P.link2 = link.GetAttribute("href");
-                    Program.listaProdutos.Add(P);
-                    cont2 += 1;
-                    if (progressBar1.InvokeRequired)
-                    {
-                        Action define = delegate { updatebar(); };
-                        progressBar1.Invoke(define);
-                    }
-
-                }
-                
-                var threadParameters2 = new System.Threading.ThreadStart(delegate {
-                    var options = new ChromeOptions();
-                    options.AddArguments("headless");
-                    var tdriver = new ChromeDriver(ChromeDriverService,options);
-                    for (int i = 0; i < 22; i++) {
-                        var produto = Program.listaProdutos[i];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        cont2 += 1;
-                        if (progressBar1.InvokeRequired)
-                        {
-                            Action define = delegate { updatebar(); };
-                            progressBar1.Invoke(define);
-                        }
-                    }
-                tdriver.Close();
-                    tdriver.Dispose();
-                });
-                var thread4 = new System.Threading.Thread(threadParameters2);
-                var threadParameters3 = new System.Threading.ThreadStart(delegate {
-                    var options = new ChromeOptions();
-                    options.AddArguments("headless");
-                    var tdriver = new ChromeDriver(ChromeDriverService, options);
-                    for (int i2 = 21; i2 < 52; i2++)
-                    {
-                        var produto = Program.listaProdutos[i2];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        cont2 += 1;
-                        if (progressBar1.InvokeRequired)
-                        {
-                            Action define = delegate { updatebar(); };
-                            progressBar1.Invoke(define);
-                        }
-                    }
-                    tdriver.Close();
-                    tdriver.Dispose();
-                });
-                var thread3 = new System.Threading.Thread(threadParameters2);
-                thread3.Start();
-                thread4.Start();
+                progressBar1.Invoke(new Action(() => progressBar1.Value = progress));
             }
             else
             {
-                driver.Navigate().GoToUrl("https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/?page=" + Program.cont1.ToString());
-                var cards = driver.FindElements(By.CssSelector("[data-cy='l-card']"));
-
-
-                foreach (var card in cards)
-                {
-                    Produto P = new Produto();
-                    var nome = card.FindElement(By.TagName("h6"));
-                    P.Nome = nome.Text;
-                    var preco = card.FindElement(By.CssSelector("[data-testid='ad-price']"));
-                    P.Preco = preco.Text;
-                    var local = card.FindElement(By.CssSelector("[data-testid='location-date']"));
-                    P.Localizacao = local.Text;
-                    var link = card.FindElement(By.TagName("a"));
-                    P.link2 = link.GetAttribute("href");
-                    Program.listaProdutos.Add(P);
-                    if (progressBar1.InvokeRequired)
-                    {
-                        Action define = delegate { updatebar(); };
-                        progressBar1.Invoke(define);
-                    }
-                }
-                var threadParameters2 = new System.Threading.ThreadStart(delegate {
-                    var options = new ChromeOptions();
-                    options.AddArguments("headless");
-                    var tdriver = new ChromeDriver(ChromeDriverService, options);
-                    for (int i = 0; i < 22; i++)
-                    {
-                        var produto = Program.listaProdutos[i];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        cont2 += 1;
-                        if (progressBar1.InvokeRequired)
-                        {
-                            Action define = delegate { updatebar(); };
-                            progressBar1.Invoke(define);
-                        }
-                    }
-                    tdriver.Close();
-                    tdriver.Dispose();
-                });
-                var thread4 = new System.Threading.Thread(threadParameters2);
-                var threadParameters3 = new System.Threading.ThreadStart(delegate {
-                    var options = new ChromeOptions();
-                    options.AddArguments("headless");
-                    var tdriver = new ChromeDriver(ChromeDriverService, options);
-                    for (int i2 = 21; i2 < 52; i2++)
-                    {
-                        var produto = Program.listaProdutos[i2];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        cont2 += 1;
-                        if (progressBar1.InvokeRequired)
-                        {
-                            Action define = delegate { updatebar(); };
-                            progressBar1.Invoke(define);
-                        }
-                    }
-                    tdriver.Close();
-                    tdriver.Dispose();
-                });
-                var thread3 = new System.Threading.Thread(threadParameters2);
-                thread3.Start();
-                thread4.Start();
+                progressBar1.Value = progress;
             }
         }
+        private void scrape_max(object sender, int max)
+        {
+            if (progressBar1.InvokeRequired)
+            {
+                progressBar1.Invoke(new Action(() => progressBar1.Maximum = max));
+            }
+            else
+            {
+                progressBar1.Maximum = max;
+            }
+        }
+
+        public Form1()
+        {
+            InitializeComponent();
+            scrape = new scrapper();
+            scrape.ProgressChanged += scrape_progresschanged;
+            scrape.ProgressMaximum += scrape_max;
+        }
+       
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            scrape.load();
+        }
+        
+       
 
         private void controlo_2_dia1_Load(object sender, EventArgs e)
         {
@@ -220,17 +84,26 @@ namespace Projeto_2_dia
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var threadParameters = new System.Threading.ThreadStart(delegate { Buscardados(Program.cont1);  });
+            if (progressBar1.InvokeRequired)
+            {
+                Action define = delegate { progressBar1.Maximum = Program.listaProdutos.Count * 2; };
+                progressBar1.Invoke(define);
+            }
+            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscardados(Program.cont1);  });
             var thread2 = new System.Threading.Thread(threadParameters);
             thread2.Start();
-
+           /* if (progressBar1.InvokeRequired)
+            {
+                Action define = delegate { progressBar1.Value = 0; };
+                progressBar1.Invoke(define);
+            }*/
 
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
             Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
-            for (int i = 1; i < 52; i++)
+            for (int i = 1; i < Program.listaProdutos.Count; i++)
             {
                 controlo_2_Dias[i]=new Controlo_2_dia(Program.listaProdutos[i]);
 
@@ -242,7 +115,6 @@ namespace Projeto_2_dia
 
         private void button5_Click(object sender, EventArgs e)
         {
-            
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 string jsonString = JsonSerializer.Serialize(Program.listaProdutos);
@@ -259,7 +131,7 @@ namespace Projeto_2_dia
 
         private void button4_Click(object sender, EventArgs e)
         {
-            if(openFileDialog1.ShowDialog() == DialogResult.OK) 
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 string jsonFilePath = openFileDialog1.FileName;
                 using (FileStream fileStream = new FileStream(jsonFilePath, FileMode.Open, FileAccess.Read))
@@ -307,8 +179,7 @@ namespace Projeto_2_dia
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            driver.Close();
-            driver.Dispose();
+            scrape.close();
         }
     }
 }

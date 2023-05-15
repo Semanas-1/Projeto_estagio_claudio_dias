@@ -9,7 +9,8 @@ namespace Projeto_2_dia
     internal static class Program
     {
        public static List<Produto> listaProdutos = new List<Produto>();
-       public static int cont1 = 1;
+        public static int cont1 = 1;
+       public static int cont2 = 0;
 
         /// <summary>
         /// Ponto de entrada principal para o aplicativo.
