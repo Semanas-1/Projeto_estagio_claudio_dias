@@ -89,15 +89,14 @@ namespace Projeto_2_dia
                 Action define = delegate { progressBar1.Maximum = Program.listaProdutos.Count * 2; };
                 progressBar1.Invoke(define);
             }
-            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscardados(Program.cont1);  });
-            var thread2 = new System.Threading.Thread(threadParameters);
-            thread2.Start();
-           /* if (progressBar1.InvokeRequired)
+            if (progressBar1.InvokeRequired)
             {
                 Action define = delegate { progressBar1.Value = 0; };
                 progressBar1.Invoke(define);
-            }*/
-
+            }
+            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes();  });
+            var thread2 = new System.Threading.Thread(threadParameters);
+            thread2.Start();
         }
 
         private void button3_Click(object sender, EventArgs e)

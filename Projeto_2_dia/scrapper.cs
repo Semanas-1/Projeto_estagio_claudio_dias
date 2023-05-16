@@ -11,13 +11,16 @@ using System.Text.Json;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using static System.Net.Mime.MediaTypeNames;
+using System.Threading;
 
 namespace Projeto_2_dia
 {
+    
     public class scrapper
     {
         public event EventHandler<int> ProgressChanged;
         public event EventHandler<int> ProgressMaximum;
+        public static List<Produto> newChunk;
         public scrapper()
         {
             this.ChromeDriverService = ChromeDriverService.CreateDefaultService();
@@ -32,7 +35,7 @@ namespace Projeto_2_dia
             driver = new ChromeDriver(ChromeDriverService, options);
        }
 
-        public void Buscardados(int pagina) 
+        public void Buscarlistaprod(int pagina) 
         {
                 ProgressMaximum?.Invoke(this,104);
                 var urlsite = pagina < 2 ? "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/" : "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/?page=" + pagina;
@@ -60,80 +63,38 @@ namespace Projeto_2_dia
                     MessageBox.Show(e.Message);
                    }
                 }
-            var threadParameters2 = new System.Threading.ThreadStart(delegate {
+            
+        }
+        public void Buscardetalhesprod (int i, IWebDriver tdriver)
+        {
+            var produto = Program.listaProdutos[i];
+            tdriver.Navigate().GoToUrl(produto.link2);
+            var img = tdriver.FindElement(By.TagName("img"));
+            produto.UrlImagem = img.GetAttribute("src");
+            var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
+            produto.Descricao = descri.Text;
+            Program.cont2 += 1;
+            ProgressChanged?.Invoke(this, Program.cont2);
+        }
+
+        public void Buscardetalhes()
+        {
+            List<List<int>> listdiv = Program.listaProdutos.SplitList(13);
+            List<Thread> qualquer = new List<Thread>();
+           // var threads = qualquer<Thread>();
+            foreach (List<int> list in listdiv)
+            {
+                var thread = new Thread(() =>
+                {
                     var options = new ChromeOptions();
                     options.AddArguments("headless");
                     var tdriver = new ChromeDriver(ChromeDriverService, options);
-                    var tent = 0;
-                    for (int i = 0; i < Program.listaProdutos.Count/2; i++)
+                    foreach (var produto in list)
                     {
-                    try
-                     {
-                        var produto = Program.listaProdutos[i];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        Program.cont2 += 1;
-                        ProgressChanged?.Invoke(this, Program.cont2);
-                        tent = 0;
-                     }
-                    catch (OpenQA.Selenium.WebDriverException ) { }
-                    catch(Exception )
-                    {
-                        tent++;
-                        if(tent<3)
-                        {
-                            i--;
-                        }
+                        Buscardetalhesprod(produto, tdriver);
                     }
-                    }
-                try
-                {
-                    tdriver.Close();
-                    tdriver.Dispose();
-                }
-                catch(OpenQA.Selenium.WebDriverException) { }
-            });
-            var threadParameters3 = new System.Threading.ThreadStart(delegate {
-                    
-                     var tent = 0;
-                for (int i2 = Program.listaProdutos.Count / 2; i2 < Program.listaProdutos.Count; i2++)
-                {
-                    try
-                    {
-                        var produto = Program.listaProdutos[i2];
-                        driver.Navigate().GoToUrl(produto.link2);
-                        var img = driver.FindElement(By.TagName("img"));
-                        produto.UrlImagem = img.GetAttribute("src");
-                        var descri = driver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
-                        produto.Descricao = descri.Text;
-                        Program.cont2 += 1;
-                        ProgressChanged?.Invoke(this, Program.cont2);
-                        tent = 0;
-                    }
-                    catch (OpenQA.Selenium.WebDriverException) { }
-                    catch (Exception )
-                    {
-                        tent++;
-                        if (tent < 3)
-                        {
-                            i2--;
-                        }
-                    }
-                }
-                try
-                {
-                    driver.Close();
-                    driver.Dispose();
-                }
-                catch (OpenQA.Selenium.WebDriverException) { }
-            });
-                var thread3 = new System.Threading.Thread(threadParameters2);
-                var thread4 = new System.Threading.Thread(threadParameters3);
-                thread3.Start();
-                thread4.Start();
+                });
+            }
         }
     }
 }
