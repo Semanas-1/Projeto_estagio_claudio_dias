@@ -179,7 +179,7 @@ namespace Projeto_2_dia
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            scrape.close();
+            
         }
     }
 }

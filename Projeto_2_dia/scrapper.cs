@@ -31,11 +31,7 @@ namespace Projeto_2_dia
             options.AddArguments("headless");
             driver = new ChromeDriver(ChromeDriverService, options);
        }
-        public void close() 
-        {
-            driver.Close();
-            driver.Dispose();
-        }
+
         public void Buscardados(int pagina) 
         {
                 ProgressMaximum?.Invoke(this,104);
@@ -84,7 +80,7 @@ namespace Projeto_2_dia
                         tent = 0;
                      }
                     catch (OpenQA.Selenium.WebDriverException ) { }
-                    catch(Exception e)
+                    catch(Exception )
                     {
                         tent++;
                         if(tent<3)
@@ -101,26 +97,24 @@ namespace Projeto_2_dia
                 catch(OpenQA.Selenium.WebDriverException) { }
             });
             var threadParameters3 = new System.Threading.ThreadStart(delegate {
-                    var options = new ChromeOptions();
-                    options.AddArguments("headless");
-                    var tdriver = new ChromeDriver(ChromeDriverService, options);
+                    
                      var tent = 0;
                 for (int i2 = Program.listaProdutos.Count / 2; i2 < Program.listaProdutos.Count; i2++)
                 {
                     try
                     {
                         var produto = Program.listaProdutos[i2];
-                        tdriver.Navigate().GoToUrl(produto.link2);
-                        var img = tdriver.FindElement(By.TagName("img"));
+                        driver.Navigate().GoToUrl(produto.link2);
+                        var img = driver.FindElement(By.TagName("img"));
                         produto.UrlImagem = img.GetAttribute("src");
-                        var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
+                        var descri = driver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
                         produto.Descricao = descri.Text;
                         Program.cont2 += 1;
                         ProgressChanged?.Invoke(this, Program.cont2);
                         tent = 0;
                     }
                     catch (OpenQA.Selenium.WebDriverException) { }
-                    catch (Exception e)
+                    catch (Exception )
                     {
                         tent++;
                         if (tent < 3)
@@ -131,8 +125,8 @@ namespace Projeto_2_dia
                 }
                 try
                 {
-                    tdriver.Close();
-                    tdriver.Dispose();
+                    driver.Close();
+                    driver.Dispose();
                 }
                 catch (OpenQA.Selenium.WebDriverException) { }
             });
