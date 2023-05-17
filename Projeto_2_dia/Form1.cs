@@ -23,11 +23,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using static System.Net.Mime.MediaTypeNames;
 using System.Diagnostics;
+using System.Net;
 
 
 namespace Projeto_2_dia
 {
-    
+
     public partial class Form1 : Form
     {
         private scrapper scrape;
@@ -63,22 +64,22 @@ namespace Projeto_2_dia
             scrape.ProgressChanged += scrape_progresschanged;
             scrape.ProgressMaximum += scrape_max;
         }
-       
+
         private void Form1_Load(object sender, EventArgs e)
         {
             scrape.load();
         }
-        
-       
+
+
 
         private void controlo_2_dia1_Load(object sender, EventArgs e)
         {
-           
+
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
-            
+
         }
 
 
@@ -94,35 +95,73 @@ namespace Projeto_2_dia
                 Action define = delegate { progressBar1.Value = 0; };
                 progressBar1.Invoke(define);
             }
-            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes();  });
+            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes(); });
             var thread2 = new System.Threading.Thread(threadParameters);
             thread2.Start();
+            
+            
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
+            flowLayoutPanel1.Controls.Clear();
             Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
             for (int i = 1; i < Program.listaProdutos.Count; i++)
             {
-                controlo_2_Dias[i]=new Controlo_2_dia(Program.listaProdutos[i]);
+                controlo_2_Dias[i] = new Controlo_2_dia(Program.listaProdutos[i]);
 
                 flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
             }
         }
 
-        
+
 
         private void button5_Click(object sender, EventArgs e)
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                string jsonString = JsonSerializer.Serialize(Program.listaProdutos);
                 string jsonFilePath = saveFileDialog1.FileName;
+                string folderPath = Path.GetDirectoryName(jsonFilePath);
+                string jsonFileName = Path.GetFileName(jsonFilePath);
+                string imagesFolder = Path.Combine(folderPath, Path.GetFileNameWithoutExtension(jsonFileName));
+
+                
+                Directory.CreateDirectory(imagesFolder);
+                List<string> validUrls = new List<string>();
+
+                foreach (var url in Program.Urls)
+                {
+                    if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
+                    {
+                        validUrls.Add(url);
+                    }
+                }
+                progressBar2.Maximum = validUrls.Count;
+                int cont3 = 0;
+                foreach (var imageUrl in validUrls)
+                {
+                    using (WebClient client = new WebClient())
+                    {
+                        
+                        string imageFileName = Path.GetFileName(imageUrl);
+
+                       
+                        string imageFilePath = Path.Combine(imagesFolder, imageFileName);
+
+                        
+                        client.DownloadFile(imageUrl, imageFilePath + ".png");
+                    }
+                    cont3++;
+                    progressBar2.Value = cont3;
+                }
+
+                
+                string jsonString = JsonSerializer.Serialize(Program.listaProdutos);
+
+                
                 using (FileStream fileStream = new FileStream(jsonFilePath, FileMode.OpenOrCreate, FileAccess.Write))
                 {
-
-                    byte[] jsonBytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
-
+                    byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
                     fileStream.Write(jsonBytes, 0, jsonBytes.Length);
                 }
             }
@@ -144,20 +183,20 @@ namespace Projeto_2_dia
         }
         static int ParseNumber(string input)
         {
-           
+
             string pattern = @"\d+";
 
-          
+
             Match match = Regex.Match(input, pattern);
 
             if (match.Success)
             {
-                
+
                 return int.Parse(match.Value);
             }
             else
             {
-                
+
                 throw new ArgumentException("No number found in the input string.");
             }
         }
@@ -174,11 +213,13 @@ namespace Projeto_2_dia
                 { min = i; }
             }
             MessageBox.Show($"Max: {max}\r Min: {min}");
+           
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
+            scrape.driver.Close();
+            scrape.driver.Dispose();
         }
     }
 }
