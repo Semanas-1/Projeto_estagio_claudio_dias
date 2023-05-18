@@ -13,7 +13,9 @@ namespace Projeto_2_dia
     {
         private string _descricao = "";
         private string _urlimagem = "";
+        private List<string> _urlImagens = new List<string>();
         public string Nome { get; set; }
+        public string Id { get; set; }
         public string Descricao
         {
             get { return this._descricao; }
@@ -26,8 +28,11 @@ namespace Projeto_2_dia
             get { return this._urlimagem; }
             set { this._urlimagem = value; NotifyPropertyChanged(); }
         }
-
-       
+        public List<string> UrlsImagens
+        {
+            get { return this._urlImagens; }
+            set { this._urlImagens = value; NotifyPropertyChanged(); }
+        }
         public string link2 { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity.Core.Objects;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace Projeto_2_dia
     public partial class Controlo_2_dia : UserControl
     {
         private Produto produto;
+        private int imagemCont = 0;
 
         public Controlo_2_dia(Produto prod)
         {
@@ -56,12 +58,18 @@ namespace Projeto_2_dia
 
         }
 
+        private void button2_Click(object sender, EventArgs e)
+        {
+            int proxCont = (this.imagemCont+1)%this.produto.UrlsImagens.Count;
+            this.imagemCont = proxCont;
+            pictureBox1.ImageLocation = this.produto.UrlsImagens[imagemCont];
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
-
-
-
-
+            int proxCont = (this.imagemCont - 1 + this.produto.UrlsImagens.Count) % this.produto.UrlsImagens.Count;
+            this.imagemCont = proxCont;
+            pictureBox1.ImageLocation = this.produto.UrlsImagens[imagemCont];
         }
     }
 }

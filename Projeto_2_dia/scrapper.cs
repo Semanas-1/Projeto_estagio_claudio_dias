@@ -14,6 +14,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Threading;
 using System.Net.Http;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Data.SQLite;
 
 namespace Projeto_2_dia
 {
@@ -44,10 +45,12 @@ namespace Projeto_2_dia
             var urlsite = pagina < 2 ? "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/" : "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/?page=" + pagina;
             driver.Navigate().GoToUrl(urlsite);
             var cards = driver.FindElements(By.CssSelector("[data-cy='l-card']"));
-            foreach (var card in cards)
+            for (int i=0; i<cards.Count;i++)
             {
+                if (i >= 10) break;
                 try
                 {
+                    var card = cards[i];
                     Produto P = new Produto();
                     var nome = card.FindElement(By.TagName("h6"));
                     P.Nome = nome.Text;
@@ -78,6 +81,8 @@ namespace Projeto_2_dia
             {
                 var url = card.GetAttribute("src");
                 Program.Urls.Add(url);
+                produto.UrlsImagens.Add(url);
+
             }
         }
         public void Buscardetalhesprod(int i, IWebDriver tdriver)
@@ -99,7 +104,6 @@ namespace Projeto_2_dia
 
             }
         }
-
         public void Buscardetalhes()
         {
             List<List<int>> listdiv = Program.listaProdutos.SplitList(13);
@@ -134,6 +138,7 @@ namespace Projeto_2_dia
                      driver.Close();
                      driver.Dispose();
                      driver.Quit();
+                     EnviarBD();
                     }
                     catch (OpenQA.Selenium.WebDriverException) { }
                     catch (System.NullReferenceException) { }
@@ -141,6 +146,41 @@ namespace Projeto_2_dia
 
             });
             thread2.Start();
+            
+        }
+        public void EnviarBD()
+        {
+            using (var connection = new SQLiteConnection("Data Source=Basedados.db"))
+            {
+                connection.Open();
+                foreach (var produto in Program.listaProdutos)
+                {
+                    string insertProdutoQuery = "INSERT INTO Produtos (Nome, Descricao, Localidade, Preco) VALUES (@Nome, @Descricao, @Localidade, @Preco)";
+                    using (SQLiteCommand insertProdutoCommand = new SQLiteCommand(insertProdutoQuery, connection))
+                    {
+                        insertProdutoCommand.Parameters.AddWithValue("@Nome", produto.Nome);
+                        insertProdutoCommand.Parameters.AddWithValue("@Descricao", produto.Descricao);
+                        insertProdutoCommand.Parameters.AddWithValue("@Localidade", produto.Localizacao);
+                        insertProdutoCommand.Parameters.AddWithValue("@Preco", produto.Preco);
+                        insertProdutoCommand.ExecuteNonQuery();
+                    }
+                    using (SQLiteCommand com = new SQLiteCommand("SELECT last_insert_rowid()", connection))
+                    {
+                        var id = com.ExecuteScalar();
+                        produto.Id = id.ToString();
+                    }
+                }
+                foreach (var produto in Program.listaProdutos)
+                {
+                    string insertImagemQuery = "INSERT INTO Imagens (Url,ProdutoId) VALUES (@Url,@ProdutoId)";
+                    using (SQLiteCommand insertImagemCommand = new SQLiteCommand(insertImagemQuery, connection))
+                    {
+                        insertImagemCommand.Parameters.AddWithValue("@Url", produto.UrlImagem);
+                        insertImagemCommand.Parameters.AddWithValue("@ProdutoId", produto.Id);
+                        insertImagemCommand.ExecuteNonQuery();
+                    }
+                }
+            }
         }
     }
 }

@@ -218,8 +218,12 @@ namespace Projeto_2_dia
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            scrape.driver.Close();
-            scrape.driver.Dispose();
+            try
+            {
+                scrape.driver.Close();
+                scrape.driver.Dispose();
+            }
+            catch (OpenQA.Selenium.WebDriverArgumentException){ }
         }
     }
 }
