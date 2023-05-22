@@ -32,8 +32,6 @@ namespace Projeto_2_dia
     public partial class Form1 : Form
     {
         private scrapper scrape;
-
-
         private void scrape_progresschanged(object sender, int progress)
         {
             if (progressBar1.InvokeRequired)
@@ -56,7 +54,17 @@ namespace Projeto_2_dia
                 progressBar1.Maximum = max;
             }
         }
+        private void FlowLoad()
+        {
+            flowLayoutPanel1.Controls.Clear();
+            Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
+            for (int i = 1; i < Program.listaProdutos_mostrar.Count; i++)
+            {
+                controlo_2_Dias[i] = new Controlo_2_dia(Program.listaProdutos_mostrar[i]);
 
+                flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
+            }
+        }
         public Form1()
         {
             InitializeComponent();
@@ -64,25 +72,20 @@ namespace Projeto_2_dia
             scrape.ProgressChanged += scrape_progresschanged;
             scrape.ProgressMaximum += scrape_max;
         }
-
         private void Form1_Load(object sender, EventArgs e)
         {
             scrape.load();
+            scrape.load2();
+            FlowLoad();
         }
-
-
-
         private void controlo_2_dia1_Load(object sender, EventArgs e)
         {
 
         }
-
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
 
         }
-
-
         private void button1_Click(object sender, EventArgs e)
         {
             if (progressBar1.InvokeRequired)
@@ -95,11 +98,10 @@ namespace Projeto_2_dia
                 Action define = delegate { progressBar1.Value = 0; };
                 progressBar1.Invoke(define);
             }
-            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes(); });
+            Program.urlpesquisa = textBox1.Text;
+            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.analisarUrls(); scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes(); });
             var thread2 = new System.Threading.Thread(threadParameters);
-            thread2.Start();
-            
-            
+            thread2.Start(); 
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -113,9 +115,6 @@ namespace Projeto_2_dia
                 flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
             }
         }
-
-
-
         private void button5_Click(object sender, EventArgs e)
         {
             if (saveFileDialog1.ShowDialog() == DialogResult.OK)
@@ -166,7 +165,6 @@ namespace Projeto_2_dia
                 }
             }
         }
-
         private void button4_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -215,7 +213,6 @@ namespace Projeto_2_dia
             MessageBox.Show($"Max: {max}\r Min: {min}");
            
         }
-
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             try

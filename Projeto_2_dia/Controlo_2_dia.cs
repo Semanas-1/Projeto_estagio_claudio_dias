@@ -60,16 +60,16 @@ namespace Projeto_2_dia
 
         private void button2_Click(object sender, EventArgs e)
         {
-            int proxCont = (this.imagemCont+1)%this.produto.UrlsImagens.Count;
+            int proxCont = (this.imagemCont+1)%this.produto.DBimgs.Count;
             this.imagemCont = proxCont;
-            pictureBox1.ImageLocation = this.produto.UrlsImagens[imagemCont];
+            pictureBox1.ImageLocation = this.produto.DBimgs[imagemCont].Url;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            int proxCont = (this.imagemCont - 1 + this.produto.UrlsImagens.Count) % this.produto.UrlsImagens.Count;
+            int proxCont = (this.imagemCont - 1 + this.produto.DBimgs.Count) % this.produto.DBimgs.Count;
             this.imagemCont = proxCont;
-            pictureBox1.ImageLocation = this.produto.UrlsImagens[imagemCont];
+            pictureBox1.ImageLocation = this.produto.DBimgs[imagemCont].Url;
         }
     }
 }

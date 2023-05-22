@@ -9,10 +9,11 @@ namespace Projeto_2_dia
     internal static class Program
     {
        public static List<Produto> listaProdutos = new List<Produto>();
-       public static List<string> Urls = new List<string>();
+        public static List<Produto> listaProdutos_mostrar = new List<Produto>();
+        public static List<string> Urls = new List<string>();
        public static int cont1 = 1;
        public static int cont2 = 0;
-         
+       public static string urlpesquisa = "";
         
         public static List<List<int>> SplitList<T>(this List<T> me, int size )
         {

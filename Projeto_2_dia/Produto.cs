@@ -13,7 +13,7 @@ namespace Projeto_2_dia
     {
         private string _descricao = "";
         private string _urlimagem = "";
-        private List<string> _urlImagens = new List<string>();
+        private List<DBimg> _dbimgs = new List<DBimg>();
         public string Nome { get; set; }
         public string Id { get; set; }
         public string Descricao
@@ -28,20 +28,17 @@ namespace Projeto_2_dia
             get { return this._urlimagem; }
             set { this._urlimagem = value; NotifyPropertyChanged(); }
         }
-        public List<string> UrlsImagens
+        public List<DBimg> DBimgs
         {
-            get { return this._urlImagens; }
-            set { this._urlImagens = value; NotifyPropertyChanged(); }
+            get { return this._dbimgs; }
+            set { this._dbimgs = value; NotifyPropertyChanged(); }
         }
         public string link2 { get; set; }
-
         public event PropertyChangedEventHandler PropertyChanged;
-
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public List<string> Urls = new List<string>();
-
     }
 }
