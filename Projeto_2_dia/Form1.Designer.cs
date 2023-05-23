@@ -132,6 +132,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(142, 20);
             this.textBox1.TabIndex = 14;
+            this.textBox1.Text = "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/";
             // 
             // label1
             // 

@@ -17,6 +17,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
 using System.Data.SQLite;
 using System.Net;
 using System.Security.Policy;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace Projeto_2_dia
 {
@@ -61,20 +62,22 @@ namespace Projeto_2_dia
         }
         public void Buscarlistaprod(int pagina)
         {
-            
+
             var urlsite = pagina < 2 ? Program.urlpesquisa : Program.urlpesquisa + "?page=" + pagina;
             try
             {
                 driver.Navigate().GoToUrl(urlsite);
             }
             catch (OpenQA.Selenium.WebDriverArgumentException)
-            { 
-            MessageBox.Show("Insira um url","Erro detetado no input",MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            {
+                MessageBox.Show("Insira um url", "Erro detetado no input", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
             var cards = driver.FindElements(By.CssSelector("[data-cy='l-card']"));
+            ProgressMaximum?.Invoke(this, cards.Count * 2);
+            bool moveToNextCard = false;
             for (int i = 0; i < cards.Count; i++)
             {
-                if (i >= 10) break;
+                //if (i >= 10) break;
                 try
                 {
                     var card = cards[i];
@@ -82,28 +85,37 @@ namespace Projeto_2_dia
                     var link = card.FindElement(By.TagName("a"));
                     P.link2 = link.GetAttribute("href");
                     bool linkFound = false;
-                    for(i=0;i<listaUrl.Count;i++)
+                    for (int j = 0; j < listaUrl.Count; j++)
                     {
-
-                        if (listaUrl[i] == P.link2)
+                        if (listaUrl[j] == P.link2)
                         {
                             linkFound = true;
+                            moveToNextCard = true;
                             break;
                         }
                     }
                     if (linkFound)
                     {
-                        break; 
+                        Program.cont2 += 1;
+                        ProgressChanged?.Invoke(this, Program.cont2);
                     }
-                    var nome = card.FindElement(By.TagName("h6"));
-                    P.Nome = nome.Text;
-                    var preco = card.FindElement(By.CssSelector("[data-testid='ad-price']"));
-                    P.Preco = preco.Text;
-                    var local = card.FindElement(By.CssSelector("[data-testid='location-date']"));
-                    P.Localizacao = local.Text;
-                    Program.listaProdutos.Add(P);
-                    Program.cont2 += 1;
-                    ProgressChanged?.Invoke(this, Program.cont2);
+                    else
+                    {
+                        var nome = card.FindElement(By.TagName("h6"));
+                        P.Nome = nome.Text;
+                        var preco = card.FindElement(By.CssSelector("[data-testid='ad-price']"));
+                        P.Preco = preco.Text;
+                        var local = card.FindElement(By.CssSelector("[data-testid='location-date']"));
+                        P.Localizacao = local.Text;
+                        Program.listaProdutos.Add(P);
+                        Program.cont2 += 1;
+                        ProgressChanged?.Invoke(this, Program.cont2);
+                    }
+                    if (moveToNextCard)
+                    {
+                        moveToNextCard = false;
+                        continue;
+                    }
                 }
                 catch (OpenQA.Selenium.WebDriverException e)
                 {
@@ -114,15 +126,17 @@ namespace Projeto_2_dia
         }
         private void BuscarImg(int i, IWebDriver tdriver)
         {
-
             var produto = Program.listaProdutos[i];
             tdriver.Navigate().GoToUrl(produto.link2);
             var cards = tdriver.FindElements(By.CssSelector("[class='swiper-wrapper'] img"));
             foreach (var card in cards)
             {
                 var url = card.GetAttribute("src");
-                Program.Urls.Add(url);
-                produto.DBimgs.Add(new DBimg(url));
+                if (Uri.TryCreate(url, UriKind.Absolute, out Uri validUri))
+                {
+                    Program.Urls.Add(url);
+                    produto.DBimgs.Add(new DBimg(url));
+                }
             }
         }
         public void Buscardetalhesprod(int i, IWebDriver tdriver)
@@ -178,6 +192,8 @@ namespace Projeto_2_dia
                         driver.Close();
                         driver.Dispose();
                         driver.Quit();
+                        ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 2) + Program.Urls.Count);
+                        Program.cont2 = 0;
                         EnviarBDimg();
                         EnviarBD();
                         Program.cont1++;
@@ -192,41 +208,18 @@ namespace Projeto_2_dia
         }
         public void EnviarBDimg()
         {
-            List<string> validUrls = new List<string>();
-            foreach (var url in Program.Urls)
+            foreach (var produto in Program.listaProdutos)
             {
-                if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
+                foreach (var img in produto.DBimgs)
                 {
-                    validUrls.Add(url);
-                }
-            }
-            foreach (var imageUrl in validUrls)
-            {
-                using (WebClient client = new WebClient())
-                {
-
-                    string imageFileName = Path.GetFileName(imageUrl);
-
-
-                    string imageFilePath = Path.Combine("Images", imageFileName);
-
-
-                    client.DownloadFile(imageUrl, imageFilePath + ".png");
-                }
-            }
-          
-            foreach(var produto in Program.listaProdutos)
-            {
-                foreach(var img in produto.DBimgs)
-                {
-                   if(!Uri.TryCreate(img.Url, UriKind.Absolute, out Uri uri))
+                    if (!Uri.TryCreate(img.Url, UriKind.Absolute, out Uri uri))
                     {
                         continue;
                     }
                     using (WebClient client = new WebClient())
                     {
 
-                        string imageFileName = Path.GetFileName(img.Url);
+                        string imageFileName = Program.GenerateRandomString(16);
 
 
                         string imageFilePath = Path.Combine("Images", imageFileName);
@@ -235,9 +228,10 @@ namespace Projeto_2_dia
                         client.DownloadFile(img.Url, imageFilePath + ".png");
                         img.Local = imageFilePath + ".png";
                     }
+                    Program.cont2 += 1;
+                    ProgressChanged?.Invoke(this, Program.cont2);
                 }
             }
-
         }
         public void EnviarBD()
         {
@@ -261,6 +255,8 @@ namespace Projeto_2_dia
                         var id = com.ExecuteScalar();
                         produto.Id = id.ToString();
                     }
+                    Program.cont2 += 1;
+                    ProgressChanged?.Invoke(this, Program.cont2);
                 }
                 foreach (var produto in Program.listaProdutos)
                 {
@@ -271,11 +267,13 @@ namespace Projeto_2_dia
                         {
                             insertImagemCommand.Parameters.AddWithValue("@Url", img.Url);
                             insertImagemCommand.Parameters.AddWithValue("@ProdutoId", produto.Id);
-                            insertImagemCommand.Parameters.AddWithValue("@Local",img.Local);
+                            insertImagemCommand.Parameters.AddWithValue("@Local", img.Local);
                             insertImagemCommand.ExecuteNonQuery();
-                            //img.ProdutoId = produto.Id;
+                            img.ProdutoId = Convert.ToUInt16(produto.Id);
                         }
                     }
+                    Program.cont2 += 1;
+                    ProgressChanged?.Invoke(this, Program.cont2);
                 }
             }
         }
@@ -286,23 +284,39 @@ namespace Projeto_2_dia
                 connection.Open();
 
 
-                string selectQuery = "SELECT * FROM Produtos";
-
+                string selectQuery = "SELECT * FROM Produtos ";
+                string selectQuery2 = "SELECT * FROM Imagens WHERE ProdutoId=@ProdutoId ";
                 using (SQLiteCommand selectCommand = new SQLiteCommand(selectQuery, connection))
                 {
                     using (SQLiteDataReader reader = selectCommand.ExecuteReader())
                     {
-                        int cont4= 0;
+                        int cont4 = 0;
                         while (reader.Read() && cont4 < 52)
                         {
-                             Produto produto = new Produto();
-                             produto.Nome = reader.GetString(reader.GetOrdinal("Nome"));
-                             produto.Descricao = reader.GetString(reader.GetOrdinal("Descricao"));
-                             produto.Localizacao = reader.GetString(reader.GetOrdinal("Localidade"));
-                             produto.Preco =reader.GetString(reader.GetOrdinal("Preco"));
-                             produto.link2 = reader.GetString(reader.GetOrdinal("url"));
-                             Program.listaProdutos_mostrar.Add(produto);
-                             cont4++;
+                            Produto produto = new Produto();
+                            produto.Nome = reader.GetString(reader.GetOrdinal("Nome"));
+                            produto.Descricao = reader.GetString(reader.GetOrdinal("Descricao"));
+                            produto.Localizacao = reader.GetString(reader.GetOrdinal("Localidade"));
+                            produto.Preco = reader.GetString(reader.GetOrdinal("Preco"));
+                            produto.link2 = reader.GetString(reader.GetOrdinal("url"));
+                            produto.Id = reader.GetDecimal(reader.GetOrdinal("Id")).ToString();
+                            using (SQLiteCommand selectCommand2 = new SQLiteCommand(selectQuery2, connection))
+                            {
+                                selectCommand2.Parameters.AddWithValue("@ProdutoId", produto.Id);
+                                using (SQLiteDataReader reader2 = selectCommand2.ExecuteReader())
+                                {
+
+                                    while (reader2.Read())
+                                    {
+                                        var yes = new DBimg(produto.link2);
+                                        yes.Local = reader2.GetString(reader2.GetOrdinal("Local"));
+                                        yes.Id = reader2.GetInt32(reader2.GetOrdinal("Id"));
+                                        yes.ProdutoId = reader2.GetInt32(reader2.GetOrdinal("ProdutoId"));
+                                        produto.DBimgs.Add(yes);
+                                    }
+                                }
+                            }
+                            Program.listaProdutos_mostrar.Add(produto);
                         }
                     }
                 }
