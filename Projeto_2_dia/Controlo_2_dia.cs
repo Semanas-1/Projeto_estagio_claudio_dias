@@ -61,7 +61,6 @@ namespace Projeto_2_dia
 
 
         }
-
         private void button2_Click(object sender, EventArgs e)
         {
             if (produto.DBimgs.Count < 2)
@@ -71,7 +70,6 @@ namespace Projeto_2_dia
             pictureBox1.ImageLocation = this.produto.DBimgs[imagemCont].Local;
             label3.Text =$"{proxCont + 1}/{produto.DBimgs.Count }";
         }
-
         private void button1_Click(object sender, EventArgs e)
         {
             if (produto.DBimgs.Count < 2)

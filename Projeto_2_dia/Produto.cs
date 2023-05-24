@@ -16,6 +16,7 @@ namespace Projeto_2_dia
         private List<DBimg> _dbimgs = new List<DBimg>();
         public string Nome { get; set; }
         public string Id { get; set; }
+        public string Categoria { get; set; }
         public string Descricao
         {
             get { return this._descricao; }

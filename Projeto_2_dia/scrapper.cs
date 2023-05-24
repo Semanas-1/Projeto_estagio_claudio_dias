@@ -18,6 +18,7 @@ using System.Data.SQLite;
 using System.Net;
 using System.Security.Policy;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
+using System.Diagnostics;
 
 namespace Projeto_2_dia
 {
@@ -28,6 +29,12 @@ namespace Projeto_2_dia
         public event EventHandler<int> ProgressMaximum;
         public static List<string> listaUrl = new List<string>();
         public static List<Produto> newChunk;
+
+         private void GPTbar(object sender,int progress)
+        {
+            ProgressChanged?.Invoke(sender, progress);
+        }
+        
         public scrapper()
         {
             this.ChromeDriverService = ChromeDriverService.CreateDefaultService();
@@ -35,6 +42,7 @@ namespace Projeto_2_dia
         }
         public IWebDriver driver { get; set; }
         public ChromeDriverService ChromeDriverService { get; set; }
+       
         public void load()
         {
             var options = new ChromeOptions();
@@ -192,16 +200,22 @@ namespace Projeto_2_dia
                         driver.Close();
                         driver.Dispose();
                         driver.Quit();
-                        ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 2) + Program.Urls.Count);
+                        ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 3) + Program.Urls.Count);
                         Program.cont2 = 0;
+                        ProgressChanged?.Invoke(this, Program.cont2);
+                        GPT gpt = new GPT();
+                        gpt.ProgressChanged += GPTbar;
+                        gpt.GerarCategorias();
+                        gpt.separarProdutos();
                         EnviarBDimg();
                         EnviarBD();
-                        Program.cont1++;
+                        MessageBox.Show("Analise completa clique no botão para analisar outra pagina", "Aviso", MessageBoxButtons.OK,MessageBoxIcon.Information);
+                        
                     }
                     catch (OpenQA.Selenium.WebDriverException) { }
                     catch (System.NullReferenceException) { }
                 }
-
+                Program.cont1++;
             });
             thread2.Start();
 
@@ -240,7 +254,7 @@ namespace Projeto_2_dia
                 connection.Open();
                 foreach (var produto in Program.listaProdutos)
                 {
-                    string insertProdutoQuery = "INSERT INTO Produtos (Nome, Descricao, Localidade, Preco, url) VALUES (@Nome, @Descricao, @Localidade, @Preco, @url)";
+                    string insertProdutoQuery = "INSERT INTO Produtos (Nome, Descricao, Localidade, Preco, url,Categoria) VALUES (@Nome, @Descricao, @Localidade, @Preco, @url, @Categoria)";
                     using (SQLiteCommand insertProdutoCommand = new SQLiteCommand(insertProdutoQuery, connection))
                     {
                         insertProdutoCommand.Parameters.AddWithValue("@Nome", produto.Nome);
@@ -248,6 +262,7 @@ namespace Projeto_2_dia
                         insertProdutoCommand.Parameters.AddWithValue("@Localidade", produto.Localizacao);
                         insertProdutoCommand.Parameters.AddWithValue("@Preco", produto.Preco);
                         insertProdutoCommand.Parameters.AddWithValue("@url", produto.link2);
+                        insertProdutoCommand.Parameters.AddWithValue("@Categoria", produto.Categoria);
                         insertProdutoCommand.ExecuteNonQuery();
                     }
                     using (SQLiteCommand com = new SQLiteCommand("SELECT last_insert_rowid()", connection))

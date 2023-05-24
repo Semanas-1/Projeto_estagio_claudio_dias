@@ -32,6 +32,7 @@ namespace Projeto_2_dia
     public partial class Form1 : Form
     {
         private scrapper scrape;
+        public GPT gpt = new GPT();
         private void scrape_progresschanged(object sender, int progress)
         {
             if (progressBar1.InvokeRequired)
@@ -54,15 +55,28 @@ namespace Projeto_2_dia
                 progressBar1.Maximum = max;
             }
         }
+        private void textboxtemp(object sender, string ok )
+        {
+            if (richTextBox1.InvokeRequired)
+            {
+                richTextBox1.Invoke(new Action(() => richTextBox1.Text = ok));
+            }
+            else
+            {
+                richTextBox1.Text = ok;
+            }
+        }
         private void FlowLoad()
         {
             flowLayoutPanel1.Controls.Clear();
             Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
-            for (int i = 1; i < Program.listaProdutos_mostrar.Count; i++)
+            for (int i = 1; i < 52; i++)
             {
                 controlo_2_Dias[i] = new Controlo_2_dia(Program.listaProdutos_mostrar[i]);
-
-                flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
+                try
+                {
+                    flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
+                }catch (System.IndexOutOfRangeException) { }
             }
         }
         public Form1()
@@ -106,14 +120,7 @@ namespace Projeto_2_dia
 
         private void button3_Click(object sender, EventArgs e)
         {
-            flowLayoutPanel1.Controls.Clear();
-            Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
-            for (int i = 1; i < Program.listaProdutos.Count; i++)
-            {
-                controlo_2_Dias[i] = new Controlo_2_dia(Program.listaProdutos[i]);
-
-                flowLayoutPanel1.Controls.Add(controlo_2_Dias[i]);
-            }
+            
         }
         private void button5_Click(object sender, EventArgs e)
         {

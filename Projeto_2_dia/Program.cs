@@ -16,7 +16,7 @@ namespace Projeto_2_dia
         public static string urlpesquisa = "";
         private static Random random = new Random();
         private static string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-
+        public static string temporario = ""; 
         public static List<List<int>> SplitList<T>(this List<T> me, int size)
         {
             var meIndexes = me.Select((_, i) => i).ToList();
