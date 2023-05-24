@@ -13,7 +13,7 @@ namespace Projeto_2_dia
         public event EventHandler<int> ProgressChanged;
         public void GerarCategorias()
         {
-            var openAIClient = new OpenAIClient("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");
+            var openAIClient = new OpenAIClient("");
             foreach (var produto in Program.listaProdutos)
             {
                 var chatCompletionsOptions = new ChatCompletionsOptions()
@@ -40,7 +40,7 @@ namespace Projeto_2_dia
         }
         public void separarProdutos()
         {
-            var openAIClient = new OpenAIClient("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");
+            var openAIClient = new OpenAIClient("");
             foreach (var produto in Program.listaProdutos)
             {
                 var chatCompletionsOptions = new ChatCompletionsOptions()
