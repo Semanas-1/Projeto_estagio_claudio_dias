@@ -1,0 +1,8 @@
+
+namespace Projeto_2_dia
+{
+    class GPTKey
+    {
+        public const string OPENAI_KEY = "";
+    }
+}

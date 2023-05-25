@@ -30,11 +30,11 @@ namespace Projeto_2_dia
         public static List<string> listaUrl = new List<string>();
         public static List<Produto> newChunk;
 
-         private void GPTbar(object sender,int progress)
+        private void GPTbar(object sender, int progress)
         {
             ProgressChanged?.Invoke(sender, progress);
         }
-        
+
         public scrapper()
         {
             this.ChromeDriverService = ChromeDriverService.CreateDefaultService();
@@ -42,7 +42,7 @@ namespace Projeto_2_dia
         }
         public IWebDriver driver { get; set; }
         public ChromeDriverService ChromeDriverService { get; set; }
-       
+
         public void load()
         {
             var options = new ChromeOptions();
@@ -68,7 +68,7 @@ namespace Projeto_2_dia
                 connection.Close();
             }
         }
-        public void Buscarlistaprod(int pagina)
+        public void Buscarlistaprod(int pagina,Logger logger)
         {
 
             var urlsite = pagina < 2 ? Program.urlpesquisa : Program.urlpesquisa + "?page=" + pagina;
@@ -83,6 +83,7 @@ namespace Projeto_2_dia
             var cards = driver.FindElements(By.CssSelector("[data-cy='l-card']"));
             ProgressMaximum?.Invoke(this, cards.Count * 2);
             bool moveToNextCard = false;
+            logger.Log("A iniciar a busca de produtos");
             for (int i = 0; i < cards.Count; i++)
             {
                 //if (i >= 10) break;
@@ -130,24 +131,33 @@ namespace Projeto_2_dia
                     MessageBox.Show(e.Message);
                 }
             }
-
+            logger.Log($"Busca de produtos terminada, encontrados {Program.listaProdutos.Count} produtos");
         }
-        private void BuscarImg(int i, IWebDriver tdriver)
+        private void BuscarImg(int i, IWebDriver tdriver, Logger logger)
         {
             var produto = Program.listaProdutos[i];
             tdriver.Navigate().GoToUrl(produto.link2);
-            var cards = tdriver.FindElements(By.CssSelector("[class='swiper-wrapper'] img"));
-            foreach (var card in cards)
+
+            // Get element with class swiper-wrapper
+            var wrapper = tdriver.FindElement(By.CssSelector("[class='swiper-wrapper']"));
+            // Get all images inside the wrapper
+            var imgs = wrapper.FindElements(By.TagName("img"));
+            foreach (var img in imgs)
             {
-                var url = card.GetAttribute("src");
+                var url = img.GetAttribute("src");
                 if (Uri.TryCreate(url, UriKind.Absolute, out Uri validUri))
                 {
                     Program.Urls.Add(url);
                     produto.DBimgs.Add(new DBimg(url));
+                    logger.Log($"Imagem {url} adicionada ao produto {produto.Nome}");
+                }
+                else
+                {
+                    logger.Log($"Imagem {url} nao adicionada ao produto {produto.Nome} ({produto.link2})", LogType.Warning);
                 }
             }
         }
-        public void Buscardetalhesprod(int i, IWebDriver tdriver)
+        public void Buscardetalhesprod(int i, IWebDriver tdriver, Logger logger)
         {
             try
             {
@@ -155,15 +165,16 @@ namespace Projeto_2_dia
                 tdriver.Navigate().GoToUrl(produto.link2);
                 var img = tdriver.FindElement(By.TagName("img"));
                 produto.UrlImagem = img.GetAttribute("src");
-                BuscarImg(i, tdriver);
+                BuscarImg(i, tdriver, logger);
                 var descri = tdriver.FindElement(By.CssSelector("[class='css-bgzo2k er34gjf0']"));
                 produto.Descricao = descri.Text;
                 Program.cont2 += 1;
+                logger.Log($"Produto {produto.Nome} analisado (desricao e imagens)");
                 ProgressChanged?.Invoke(this, Program.cont2);
             }
             catch (OpenQA.Selenium.WebDriverException)
             {
-
+                logger.Log($"Erro ao analisar produto {Program.listaProdutos[i].Nome}", LogType.Error);
             }
         }
         public void Buscardetalhes()
@@ -171,24 +182,29 @@ namespace Projeto_2_dia
             List<List<int>> listdiv = Program.listaProdutos.SplitList(13);
             List<Thread> threads = new List<Thread>();
             List<IWebDriver> drivers = new List<IWebDriver>();
+
+            var count = 1;
             foreach (List<int> list in listdiv)
             {
                 var thread = new Thread(() =>
                 {
+                    var logger = new Logger($"split-list-{count}");
                     var options = new ChromeOptions();
                     options.AddArguments("headless");
                     var tdriver = new ChromeDriver(ChromeDriverService, options);
                     drivers.Add(tdriver);
                     foreach (var produto in list)
                     {
-                        Buscardetalhesprod(produto, tdriver);
+                        Buscardetalhesprod(produto, tdriver, logger);
                     }
                 });
                 threads.Add(thread);
                 thread.Start();
+                count++;
             }
             var thread2 = new Thread(() =>
             {
+                var logger = new Logger("end");
                 foreach (var thread in threads)
                 {
                     thread.Join();
@@ -200,27 +216,36 @@ namespace Projeto_2_dia
                         driver.Close();
                         driver.Dispose();
                         driver.Quit();
-                        ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 3) + Program.Urls.Count);
+                        ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 4) + Program.Urls.Count);
                         Program.cont2 = 0;
                         ProgressChanged?.Invoke(this, Program.cont2);
-                        GPT gpt = new GPT();
-                        gpt.ProgressChanged += GPTbar;
-                        gpt.GerarCategorias();
-                        gpt.separarProdutos();
-                        EnviarBDimg();
-                        EnviarBD();
-                        MessageBox.Show("Analise completa clique no botão para analisar outra pagina", "Aviso", MessageBoxButtons.OK,MessageBoxIcon.Information);
-                        
+                        //GPT gpt = new GPT();
+                        //gpt.ProgressChanged += GPTbar;
+                        //gpt.GerarCategorias();
+                        //gpt.separarProdutos();
+                        EnviarBDimg(logger);
+                        EnviarBD(logger);
+                        logger.Log($"Analise completa clique no botão para analisar outra pagina");
+                        ProgressMaximum?.Invoke(this, 1);
+                        ProgressChanged?.Invoke(this, 1);
+                        MessageBox.Show("Analise completa clique no botão para analisar outra pagina", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
                     }
-                    catch (OpenQA.Selenium.WebDriverException) { }
-                    catch (System.NullReferenceException) { }
+                    catch (OpenQA.Selenium.WebDriverException)
+                    {
+                        logger.Log($"Erro ao fechar o driver", LogType.Error);
+                    }
+                    catch (System.NullReferenceException)
+                    {
+                     logger.Log($"Erro ao fechar o driver", LogType.Error);
+                    }
                 }
                 Program.cont1++;
             });
             thread2.Start();
 
         }
-        public void EnviarBDimg()
+        public void EnviarBDimg(Logger logger)
         {
             foreach (var produto in Program.listaProdutos)
             {
@@ -238,30 +263,36 @@ namespace Projeto_2_dia
 
                         string imageFilePath = Path.Combine("Images", imageFileName);
 
+                        if (!Directory.Exists("Images"))
+                        {
+                            Directory.CreateDirectory("Images");
+                        }
 
                         client.DownloadFile(img.Url, imageFilePath + ".png");
                         img.Local = imageFilePath + ".png";
+                        logger.Log($"Imagem {img.Url} pertencendo ao produto {produto.Nome} guardada em {img.Local}");
                     }
                     Program.cont2 += 1;
                     ProgressChanged?.Invoke(this, Program.cont2);
+                    
                 }
             }
         }
-        public void EnviarBD()
+        public void EnviarBD(Logger logger)
         {
             using (var connection = new SQLiteConnection("Data Source=Basedados.db"))
             {
                 connection.Open();
                 foreach (var produto in Program.listaProdutos)
                 {
-                    string insertProdutoQuery = "INSERT INTO Produtos (Nome, Descricao, Localidade, Preco, url,Categoria) VALUES (@Nome, @Descricao, @Localidade, @Preco, @url, @Categoria)";
+                    string insertProdutoQuery = "INSERT INTO Produtos (Nome, Descricao, Localidade, Preco, Url,Categoria) VALUES (@Nome, @Descricao, @Localidade, @Preco, @Url, @Categoria)";
                     using (SQLiteCommand insertProdutoCommand = new SQLiteCommand(insertProdutoQuery, connection))
                     {
                         insertProdutoCommand.Parameters.AddWithValue("@Nome", produto.Nome);
                         insertProdutoCommand.Parameters.AddWithValue("@Descricao", produto.Descricao);
                         insertProdutoCommand.Parameters.AddWithValue("@Localidade", produto.Localizacao);
                         insertProdutoCommand.Parameters.AddWithValue("@Preco", produto.Preco);
-                        insertProdutoCommand.Parameters.AddWithValue("@url", produto.link2);
+                        insertProdutoCommand.Parameters.AddWithValue("@Url", produto.link2);
                         insertProdutoCommand.Parameters.AddWithValue("@Categoria", produto.Categoria);
                         insertProdutoCommand.ExecuteNonQuery();
                     }
@@ -272,6 +303,7 @@ namespace Projeto_2_dia
                     }
                     Program.cont2 += 1;
                     ProgressChanged?.Invoke(this, Program.cont2);
+                    logger.Log($"Produto {produto.Nome} guardado na base de dados com o id {produto.Id}");
                 }
                 foreach (var produto in Program.listaProdutos)
                 {
@@ -286,6 +318,13 @@ namespace Projeto_2_dia
                             insertImagemCommand.ExecuteNonQuery();
                             img.ProdutoId = Convert.ToUInt16(produto.Id);
                         }
+                        using (SQLiteCommand com = new SQLiteCommand("SELECT last_insert_rowid()", connection))
+                        {
+                            var id = com.ExecuteScalar();
+                            img.Id = int.Parse(id.ToString());
+                        }
+                        logger.Log($"Imagem {img.Url} pertencendo ao produto {produto.Nome} guardada na base de dados com o id {img.Id}");
+                        
                     }
                     Program.cont2 += 1;
                     ProgressChanged?.Invoke(this, Program.cont2);
@@ -294,9 +333,12 @@ namespace Projeto_2_dia
         }
         public void load2()
         {
+            var logger = new Logger("main");
+
             using (var connection = new SQLiteConnection("Data Source=Basedados.db"))
             {
                 connection.Open();
+                logger.Log("SQLite Connection opened");
 
 
                 string selectQuery = "SELECT * FROM Produtos ";
@@ -315,6 +357,9 @@ namespace Projeto_2_dia
                             produto.Preco = reader.GetString(reader.GetOrdinal("Preco"));
                             produto.link2 = reader.GetString(reader.GetOrdinal("url"));
                             produto.Id = reader.GetDecimal(reader.GetOrdinal("Id")).ToString();
+
+                            logger.Log($"Loaded product with ID {produto.Id}");
+
                             using (SQLiteCommand selectCommand2 = new SQLiteCommand(selectQuery2, connection))
                             {
                                 selectCommand2.Parameters.AddWithValue("@ProdutoId", produto.Id);
@@ -328,6 +373,8 @@ namespace Projeto_2_dia
                                         yes.Id = reader2.GetInt32(reader2.GetOrdinal("Id"));
                                         yes.ProdutoId = reader2.GetInt32(reader2.GetOrdinal("ProdutoId"));
                                         produto.DBimgs.Add(yes);
+
+                                        logger.Log($"Loaded image with ID {yes.Id} for product with ID {produto.Id}");
                                     }
                                 }
                             }

@@ -55,19 +55,14 @@ namespace Projeto_2_dia
                 progressBar1.Maximum = max;
             }
         }
-        private void textboxtemp(object sender, string ok )
-        {
-            if (richTextBox1.InvokeRequired)
-            {
-                richTextBox1.Invoke(new Action(() => richTextBox1.Text = ok));
-            }
-            else
-            {
-                richTextBox1.Text = ok;
-            }
-        }
+
         private void FlowLoad()
         {
+            if (Program.listaProdutos_mostrar.Count == 0)
+            {
+                return;
+            }   
+
             flowLayoutPanel1.Controls.Clear();
             Controlo_2_dia[] controlo_2_Dias = new Controlo_2_dia[52];
             for (int i = 1; i < 52; i++)
@@ -92,6 +87,8 @@ namespace Projeto_2_dia
             scrape.load2();
             FlowLoad();
         }
+
+
         private void controlo_2_dia1_Load(object sender, EventArgs e)
         {
 
@@ -113,7 +110,9 @@ namespace Projeto_2_dia
                 progressBar1.Invoke(define);
             }
             Program.urlpesquisa = textBox1.Text;
-            var threadParameters = new System.Threading.ThreadStart(delegate { scrape.analisarUrls(); scrape.Buscarlistaprod(Program.cont1); scrape.Buscardetalhes(); });
+            var threadParameters = new System.Threading.ThreadStart(delegate {
+                var logger = new Logger("Pesquisa");
+                scrape.analisarUrls(); scrape.Buscarlistaprod(Program.cont1,logger); scrape.Buscardetalhes(); });
             var thread2 = new System.Threading.Thread(threadParameters);
             thread2.Start(); 
         }
@@ -228,6 +227,31 @@ namespace Projeto_2_dia
                 scrape.driver.Dispose();
             }
             catch (OpenQA.Selenium.WebDriverArgumentException){ }
+        }
+
+        private void startNewFormLogs()
+        {
+
+            FormLogs formLogs = new FormLogs();
+            formLogs.Show();
+
+
+            formLogs.FormClosed += (s, args) =>
+            {
+                formLogs.Dispose();
+            };
+
+            System.Windows.Forms.Application.Run(formLogs);
+        }
+
+        private void openLogsExternalButton_Click(object sender, EventArgs e)
+        {
+            // Open formLogs in it's own thread so it doesn't block this UI
+            // when the multiple threads are working on different things
+
+            var thread = new Thread(startNewFormLogs);
+            thread.Start();
+
         }
     }
 }

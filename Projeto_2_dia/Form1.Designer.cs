@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             this.button1 = new System.Windows.Forms.Button();
-            this.button2 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
@@ -40,13 +38,14 @@
             this.progressBar2 = new System.Windows.Forms.ProgressBar();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.openLogsExternalButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // button1
             // 
             this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button1.Location = new System.Drawing.Point(628, 281);
+            this.button1.Location = new System.Drawing.Point(591, 281);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(90, 55);
             this.button1.TabIndex = 4;
@@ -54,32 +53,12 @@
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(658, 558);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(86, 53);
-            this.button2.TabIndex = 7;
-            this.button2.Text = "Mostar Produto mais caro ";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(769, 558);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(84, 53);
-            this.button3.TabIndex = 8;
-            this.button3.Text = "De momento sem função";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
-            // 
             // flowLayoutPanel1
             // 
             this.flowLayoutPanel1.AutoScroll = true;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(1, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(621, 639);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(570, 639);
             this.flowLayoutPanel1.TabIndex = 9;
             // 
             // saveFileDialog1
@@ -95,7 +74,7 @@
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(628, 352);
+            this.button4.Location = new System.Drawing.Point(591, 355);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(75, 23);
             this.button4.TabIndex = 10;
@@ -105,7 +84,7 @@
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(628, 393);
+            this.button5.Location = new System.Drawing.Point(591, 392);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(75, 23);
             this.button5.TabIndex = 11;
@@ -129,9 +108,9 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(724, 13);
+            this.textBox1.Location = new System.Drawing.Point(683, 13);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(142, 20);
+            this.textBox1.Size = new System.Drawing.Size(183, 20);
             this.textBox1.TabIndex = 14;
             this.textBox1.Text = "https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/";
             // 
@@ -139,26 +118,39 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(627, 9);
+            this.label1.Location = new System.Drawing.Point(586, 7);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(91, 25);
             this.label1.TabIndex = 15;
             this.label1.Text = "Url (Olx)";
             // 
-            // richTextBox1
+            // label2
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(632, 54);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(234, 221);
-            this.richTextBox1.TabIndex = 16;
-            this.richTextBox1.Text = "";
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(811, 616);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(30, 13);
+            this.label2.TabIndex = 18;
+            this.label2.Text = "Logs";
+            // 
+            // openLogsExternalButton
+            // 
+            this.openLogsExternalButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.openLogsExternalButton.Location = new System.Drawing.Point(847, 616);
+            this.openLogsExternalButton.Name = "openLogsExternalButton";
+            this.openLogsExternalButton.Size = new System.Drawing.Size(19, 18);
+            this.openLogsExternalButton.TabIndex = 19;
+            this.openLogsExternalButton.Text = ">";
+            this.openLogsExternalButton.UseVisualStyleBackColor = true;
+            this.openLogsExternalButton.Click += new System.EventHandler(this.openLogsExternalButton_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(878, 639);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.openLogsExternalButton);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.progressBar2);
@@ -166,8 +158,6 @@
             this.Controls.Add(this.button5);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.flowLayoutPanel1);
-            this.Controls.Add(this.button3);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -180,8 +170,6 @@
 
         #endregion
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.Button button3;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
@@ -191,7 +179,8 @@
         private System.Windows.Forms.ProgressBar progressBar2;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button openLogsExternalButton;
     }
 }
 

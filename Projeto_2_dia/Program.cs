@@ -17,6 +17,20 @@ namespace Projeto_2_dia
         private static Random random = new Random();
         private static string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         public static string temporario = ""; 
+
+        // Logs
+        public static List<Log> logs = new List<Log>();
+        // Event listener for when a log is added
+        public static event EventHandler<Log> LogAdded;
+
+
+        public static void AddLog(Log log)
+        {
+            logs.Add(log);
+            LogAdded?.Invoke(null, log);
+        }
+
+
         public static List<List<int>> SplitList<T>(this List<T> me, int size)
         {
             var meIndexes = me.Select((_, i) => i).ToList();

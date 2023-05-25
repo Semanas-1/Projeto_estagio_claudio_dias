@@ -11,18 +11,21 @@ namespace Projeto_2_dia
     public class GPT
     {
         public event EventHandler<int> ProgressChanged;
+
         public void GerarCategorias()
         {
-            var openAIClient = new OpenAIClient("");
+            var logger = new Logger("main");
+            logger.Log("Gerando categorias...");
+            var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
             foreach (var produto in Program.listaProdutos)
             {
                 var chatCompletionsOptions = new ChatCompletionsOptions()
-                {
-                    Messages =
-                {
-                new ChatMessage(ChatRole.User,$"Diz me baseado nestas categorias (Carros, motos e barcos/Imóveis/Bebé e Criança/Lazer/Telemóveis e Tablets/Agricultura/Animais/Desporto/Moda/Móveis, Casa e Jardim/Tecnologia/Emprego/Serviços/Equipamentos e Ferramentas) em qual delas se aplica um produto com este nome:{produto.Nome} e descrição:{produto.Descricao}, responde apenas com o nome da categoria nada mais." ),
-              }
-                };
+                    {
+                        Messages =
+                            {
+                                new ChatMessage(ChatRole.User,$"Diz me baseado nestas categorias (Carros, motos e barcos/Imóveis/Bebé e Criança/Lazer/Telemóveis e Tablets/Agricultura/Animais/Desporto/Moda/Móveis, Casa e Jardim/Tecnologia/Emprego/Serviços/Equipamentos e Ferramentas) em qual delas se aplica um produto com este nome:{produto.Nome} e descrição:{produto.Descricao}, responde apenas com o nome da categoria nada mais." ),
+                            }
+                    };
                 var response = openAIClient.GetChatCompletions(
                      deploymentOrModelName: "gpt-3.5-turbo",
                      chatCompletionsOptions
@@ -33,14 +36,18 @@ namespace Projeto_2_dia
                 {
                     tempm += choice.Message.Content;
                 }
+                logger.Log($"Produto {produto.Nome} pertence à categoria {tempm}");
                 produto.Categoria = tempm;
                 Program.cont2 += 1;
                 ProgressChanged?.Invoke(this, Program.cont2);
             }
+            logger.Log("Categorias geradas");
         }
         public void separarProdutos()
         {
-            var openAIClient = new OpenAIClient("");
+            var logger = new Logger("main");
+            var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
+            logger.Log("Separando produtos...");
             foreach (var produto in Program.listaProdutos)
             {
                 var chatCompletionsOptions = new ChatCompletionsOptions()
@@ -60,7 +67,7 @@ namespace Projeto_2_dia
                     temp1 += choice.Message.Content;
                 }
                 produto.Categoria = temp1;
-                if (temp1 == "sim")
+                if (temp1.ToLower().Contains("sim"))
                 {
                     var chatCompletionsOptions2 = new ChatCompletionsOptions()
                     {
@@ -79,8 +86,10 @@ namespace Projeto_2_dia
                         temp2 += choice.Message.Content;
                     }
                     Program.temporario = temp2;
+                    logger.Log($"Produto {produto.Nome} tem sub-produtos que são{Program.temporario}");
                 }
             }
+            logger.Log("Produtos separados");
         }
     }
 }
