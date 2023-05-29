@@ -19,6 +19,7 @@ using System.Net;
 using System.Security.Policy;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using System.Diagnostics;
+using Microsoft.Extensions.Azure;
 
 namespace Projeto_2_dia
 {
@@ -150,6 +151,7 @@ namespace Projeto_2_dia
                     Program.Urls.Add(url);
                     produto.DBimgs.Add(new DBimg(url));
                     logger.Log($"Imagem {url} adicionada ao produto {produto.Nome}");
+                    Program.dbImgQueue.Enqueue(new DBimg(url));
                 }
                 else
                 {
@@ -202,6 +204,13 @@ namespace Projeto_2_dia
                 thread.Start();
                 count++;
             }
+            var thread3 = new Thread(() =>
+            {
+                var logger = new Logger("Download");
+                DownloadThread(logger);
+            });
+            thread3.Start();
+
             var thread2 = new Thread(() =>
             {
                 var logger = new Logger("end");
@@ -219,11 +228,12 @@ namespace Projeto_2_dia
                         ProgressMaximum?.Invoke(this, (Program.listaProdutos.Count * 4) + Program.Urls.Count);
                         Program.cont2 = 0;
                         ProgressChanged?.Invoke(this, Program.cont2);
-                        //GPT gpt = new GPT();
-                        //gpt.ProgressChanged += GPTbar;
-                        //gpt.GerarCategorias();
-                        //gpt.separarProdutos();
-                        EnviarBDimg(logger);
+                        GPT gpt = new GPT();
+                        gpt.ProgressChanged += GPTbar;
+                        gpt.GerarCategorias();
+                        gpt.separarProdutos();
+                        Program.noMoreItems= true;
+                        thread3.Join();
                         EnviarBD(logger);
                         logger.Log($"Analise completa clique no botão para analisar outra pagina");
                         ProgressMaximum?.Invoke(this, 1);
@@ -245,39 +255,7 @@ namespace Projeto_2_dia
             thread2.Start();
 
         }
-        public void EnviarBDimg(Logger logger)
-        {
-            foreach (var produto in Program.listaProdutos)
-            {
-                foreach (var img in produto.DBimgs)
-                {
-                    if (!Uri.TryCreate(img.Url, UriKind.Absolute, out Uri uri))
-                    {
-                        continue;
-                    }
-                    using (WebClient client = new WebClient())
-                    {
-
-                        string imageFileName = Program.GenerateRandomString(16);
-
-
-                        string imageFilePath = Path.Combine("Images", imageFileName);
-
-                        if (!Directory.Exists("Images"))
-                        {
-                            Directory.CreateDirectory("Images");
-                        }
-
-                        client.DownloadFile(img.Url, imageFilePath + ".png");
-                        img.Local = imageFilePath + ".png";
-                        logger.Log($"Imagem {img.Url} pertencendo ao produto {produto.Nome} guardada em {img.Local}");
-                    }
-                    Program.cont2 += 1;
-                    ProgressChanged?.Invoke(this, Program.cont2);
-                    
-                }
-            }
-        }
+        
         public void EnviarBD(Logger logger)
         {
             using (var connection = new SQLiteConnection("Data Source=Basedados.db"))
@@ -385,5 +363,47 @@ namespace Projeto_2_dia
                 connection.Close();
             }
         }
+        public void DownloadThread(Logger logger)
+        {
+            while (true)
+            {
+                if (Program.noMoreItems && Program.dbImgQueue.Count == 0)
+                {
+                    break;
+                }
+
+                if (Program.dbImgQueue.Count > 0)
+                {
+                    DBimg img = Program.dbImgQueue.Dequeue();
+                    
+                    if (!Uri.TryCreate(img.Url, UriKind.Absolute, out Uri uri))
+                    {
+                        continue;
+                    }
+                    using (WebClient client = new WebClient())
+                    {
+
+                        string imageFileName = Program.GenerateRandomString(16);
+
+
+                        string imageFilePath = Path.Combine("Images", imageFileName);
+
+                        if (!Directory.Exists("Images"))
+                        {
+                            Directory.CreateDirectory("Images");
+                        }
+
+                        client.DownloadFile(img.Url, imageFilePath + ".png");
+                        img.Local = imageFilePath + ".png";
+                        logger.Log($"Imagem {img.Url} foi guardada em {img.Local}");
+                    }
+                }
+                else
+                {
+                    Thread.Sleep(20);  // Pause the thread for 20 milliseconds
+                }
+            }
+        }
+
     }
 }

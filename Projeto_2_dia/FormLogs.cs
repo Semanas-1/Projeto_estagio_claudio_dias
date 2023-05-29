@@ -80,17 +80,24 @@ namespace Projeto_2_dia
             {
                 LogBox.SelectionColor = Color.Orange;
             }
-
-            LogBox.AppendText($"[{log.Time}] [{log.ThreadName}] {log.Message}\n");
-
+            try
+            {
+                LogBox.AppendText($"[{log.Time}] [{log.ThreadName}] {log.Message}\n");
+            }
+            catch (Exception e)
+            {
+                
+            }
 
             // If the richtextbox is scrolled to the bottom, scroll it down so the new line is visible.
             // If not, we let it be
             if (LogBox.SelectionStart >= LogBox.TextLength - 1)
             {
-                try {
+                try
+                {
                     LogBox.ScrollToCaret();
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
                     Console.WriteLine(e);
                 }

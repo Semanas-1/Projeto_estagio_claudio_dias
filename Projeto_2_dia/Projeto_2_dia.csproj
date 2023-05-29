@@ -174,7 +174,6 @@
       <DependentUpon>FormLogs.cs</DependentUpon>
     </Compile>
     <Compile Include="GPT.cs" />
-    <Compile Include="GPTKey.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Produto.cs" />
@@ -211,6 +210,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="GPTKey.cs" />
     <None Include="GPTKey.cs.example" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

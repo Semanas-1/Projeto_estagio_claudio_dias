@@ -16,8 +16,9 @@ namespace Projeto_2_dia
         public static string urlpesquisa = "";
         private static Random random = new Random();
         private static string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        public static string temporario = ""; 
-
+        public static string temporario = "";
+        public static Queue<DBimg> dbImgQueue = new Queue<DBimg>();
+        public static bool noMoreItems = false;
         // Logs
         public static List<Log> logs = new List<Log>();
         // Event listener for when a log is added
