@@ -84,7 +84,7 @@ namespace Projeto_2_dia
             {
                 LogBox.AppendText($"[{log.Time}] [{log.ThreadName}] {log.Message}\n");
             }
-            catch (Exception e)
+            catch (Exception )
             {
                 
             }

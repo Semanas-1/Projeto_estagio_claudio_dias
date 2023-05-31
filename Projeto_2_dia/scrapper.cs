@@ -31,6 +31,7 @@ namespace Projeto_2_dia
         public static List<string> listaUrl = new List<string>();
         public static List<Produto> newChunk;
 
+
         private void GPTbar(object sender, int progress)
         {
             ProgressChanged?.Invoke(sender, progress);
@@ -149,9 +150,10 @@ namespace Projeto_2_dia
                 if (Uri.TryCreate(url, UriKind.Absolute, out Uri validUri))
                 {
                     Program.Urls.Add(url);
-                    produto.DBimgs.Add(new DBimg(url));
+                    DBimg dbImg = new DBimg(url);
+                    produto.DBimgs.Add(dbImg);
+                    Program.dbImgQueue.Enqueue(dbImg);
                     logger.Log($"Imagem {url} adicionada ao produto {produto.Nome}");
-                    Program.dbImgQueue.Enqueue(new DBimg(url));
                 }
                 else
                 {
@@ -374,8 +376,7 @@ namespace Projeto_2_dia
 
                 if (Program.dbImgQueue.Count > 0)
                 {
-                    DBimg img = Program.dbImgQueue.Dequeue();
-                    
+                    var img = Program.dbImgQueue.Dequeue();
                     if (!Uri.TryCreate(img.Url, UriKind.Absolute, out Uri uri))
                     {
                         continue;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,198 +59,133 @@ namespace Projeto_2_dia
         }
         public void GerarCategorias()
         {
+            List<Thread> threads = new List<Thread>();
             var logger = new Logger("main");
             logger.Log("Gerando categorias...");
-            var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
-            var openAIClient2 = new OpenAIClient(GPTKey.OPENAI_KEY);
-            int Nprodutos = Program.listaProdutos.Count;
-            var thread = new Thread(() =>
-            {
-                for (int i = 0; i < Nprodutos / 2; i++)
-                {
-                    var produto = Program.listaProdutos[i];
-                    var chatCompletionsOptions = new ChatCompletionsOptions()
-                    {
-                        Messages =
-                        {
-                                new ChatMessage(ChatRole.User,$"Diz me baseado nestas categorias (Carros, motos e barcos/Imóveis/Bebé e Criança/Lazer/Telemóveis e Tablets/Agricultura/Animais/Desporto/Moda/Móveis, Casa e Jardim/Tecnologia/Emprego/Serviços/Equipamentos e Ferramentas) em qual delas se aplica um produto com este nome:{produto.Nome} e descrição:{produto.Descricao}, responde apenas com o nome da categoria nada mais." ),
-                            }
-                    };
-                    var response = openAIClient.GetChatCompletions(
-                                                deploymentOrModelName: "gpt-3.5-turbo",
-                                                                        chatCompletionsOptions
-                                                                                             );
 
-                    string tempm = "";
-                    foreach (var choice in response.Value.Choices)
-                    {
-                        tempm += choice.Message.Content;
-                    }
-                    logger.Log($"Produto {produto.Nome} pertence à categoria {tempm}");
-                    produto.Categoria = tempm;
-                    Program.cont2 += 1;
-                    ProgressChanged?.Invoke(this, Program.cont2);
-                }
-                logger.Log("Categorias geradas");
-            });
-            var thread2 = new Thread(() =>
+            List<List<int>> listdiv = Program.listaProdutos.SplitList(13);
+            foreach (List<int> list in listdiv)
             {
-                for (int i = Nprodutos / 2; i < Nprodutos; i++)
+                var thread = new Thread(() =>
                 {
-                    var produto = Program.listaProdutos[i];
-                    var chatCompletionsOptions = new ChatCompletionsOptions()
+                    var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
+                    foreach (var produto in list)
                     {
-                        Messages =
-                            {
-                                new ChatMessage(ChatRole.User,$"Diz me baseado nestas categorias (Carros, motos e barcos/Imóveis/Bebé e Criança/Lazer/Telemóveis e Tablets/Agricultura/Animais/Desporto/Moda/Móveis, Casa e Jardim/Tecnologia/Emprego/Serviços/Equipamentos e Ferramentas) em qual delas se aplica um produto com este nome:{produto.Nome} e descrição:{produto.Descricao}, responde apenas com o nome da categoria nada mais." ),
-                            }
-                    };
-                    var response = openAIClient2.GetChatCompletions(
-                         deploymentOrModelName: "gpt-3.5-turbo",
-                         chatCompletionsOptions
-                      );
-
-                    string tempm = "";
-                    foreach (var choice in response.Value.Choices)
-                    {
-                        tempm += choice.Message.Content;
+                        GPTcategorias(produto, openAIClient, logger);
                     }
-                    logger.Log($"Produto {produto.Nome} pertence à categoria {tempm}");
-                    produto.Categoria = tempm;
-                    Program.cont2 += 1;
-                    ProgressChanged?.Invoke(this, Program.cont2);
-                }
-            });
-            thread.Start();
-            thread2.Start();
-            thread.Join();
-            thread2.Join();
-            logger.Log("Categorias geradas");
+                });
+                threads.Add(thread);
+                thread.Start();
+            }
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
+            logger.Log("Categorias geradas com sucesso!");
         }
-        public void separarProdutos()
+        public void GPTcategorias(int i, OpenAIClient openAIClient, Logger logger)
         {
-            var logger = new Logger("main");
-            var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
-            var openAIClient2 = new OpenAIClient(GPTKey.OPENAI_KEY);
-            logger.Log("Separando produtos...");
-            int Nprodutos = Program.listaProdutos.Count;
-            var thread = new Thread(() =>
+            var produto = Program.listaProdutos[i];
+            var chatCompletionsOptions = new ChatCompletionsOptions()
             {
-                for (int i = 0; i < Nprodutos / 2; i++)
-                {
-                    var produto = Program.listaProdutos[i];
-                    try
-                    {
-                        var chatCompletionsOptions = new ChatCompletionsOptions()
+                Messages =
                         {
-                            Messages =
+                                new ChatMessage(ChatRole.User,$"Diz me baseado nestas categorias (Carros, motos e barcos/Imóveis/Bebé e Criança/Lazer/Telemóveis e Tablets/Agricultura/Animais/Desporto/Moda/Móveis, Casa e Jardim/Tecnologia/Emprego/Serviços/Equipamentos e Ferramentas) em qual delas se aplica um produto com este nome:{produto.Nome} e descrição:{produto.Descricao}, responde apenas com o nome da categoria nada mais." ),
+                            }
+            };
+            var response = openAIClient.GetChatCompletions(
+                                        deploymentOrModelName: "gpt-3.5-turbo",
+                                                                chatCompletionsOptions
+                                                                                     );
+
+            string tempm = "";
+            foreach (var choice in response.Value.Choices)
+            {
+                tempm += choice.Message.Content;
+            }
+            logger.Log($"Produto {produto.Nome} pertence à categoria {tempm}");
+            produto.Categoria = tempm;
+            Program.cont2 += 1;
+            ProgressChanged?.Invoke(this, Program.cont2);
+        }
+        public void GPTseparar(int i, OpenAIClient openAIClient, Logger logger)
+        {
+            try
+            {
+                var produto = Program.listaProdutos[i];
+                var chatCompletionsOptions = new ChatCompletionsOptions()
+                {
+                    Messages =
                 {
                 new ChatMessage(ChatRole.User,$"Descrição do Produto: {produto.Descricao}\r\n\r\nA pergunta é: Existem vários produtos à venda nesta descrição,responde apenas com sim ou não?\r\n\r\nResposta: " ),
               }
-                        };
-                        var response = openAIClient.GetChatCompletions(
-                             deploymentOrModelName: "gpt-3.5-turbo",
-                             chatCompletionsOptions
-                          );
-                        string temp1 = "";
-                        foreach (var choice in response.Value.Choices)
-                        {
-                            temp1 += choice.Message.Content;
-                        }
-                        produto.Categoria = temp1;
-                        if (temp1.ToLower().Contains("sim"))
-                        {
-                            var chatCompletionsOptions2 = new ChatCompletionsOptions()
-                            {
-                                Messages =
+                };
+                var response = openAIClient.GetChatCompletions(
+                     deploymentOrModelName: "gpt-3.5-turbo",
+                     chatCompletionsOptions
+                  );
+                string temp1 = "";
+                foreach (var choice in response.Value.Choices)
+                {
+                    temp1 += choice.Message.Content;
+                }
+                if (temp1.ToLower().Contains("sim"))
+                {
+                    var chatCompletionsOptions2 = new ChatCompletionsOptions()
+                    {
+                        Messages =
                 {
                 new ChatMessage(ChatRole.User,$"Descrição do Produto: {produto.Descricao}\r\nUsando a descrição de produto acima extrai todos os sub-produtos correspondetes a este produto no formato seguinte:\r\nNome: Nome do produto\r\nValor: Valor do produto se diponível\r\nDescrição: Pequena descrição se possível\r\n----\r\nNome: xxxx\r\netc...\""),
               }
-                            };
-                            var response2 = openAIClient.GetChatCompletions(
-                                 deploymentOrModelName: "gpt-3.5-turbo",
-                                 chatCompletionsOptions2
-                              );
-                            string temp2 = "";
-                            foreach (var choice in response2.Value.Choices)
-                            {
-                                temp2 += choice.Message.Content;
-                            }
-                            Program.temporario = temp2;
-                            logger.Log($"Produto {produto.Nome} tem sub-produtos que são: {Program.temporario}");
-                            ParseStringParaProdutos(Program.temporario, produto);
-                            //wait 20 miliseconds  
-                            System.Threading.Thread.Sleep(20);
-                        }
-                    }
-                    catch (System.AggregateException)
+                    };
+                    var response2 = openAIClient.GetChatCompletions(
+                         deploymentOrModelName: "gpt-3.5-turbo",
+                         chatCompletionsOptions2
+                      );
+                    string temp2 = "";
+                    foreach (var choice in response2.Value.Choices)
                     {
-                        logger.Log("Erro ao separar produtos");
+                        temp2 += choice.Message.Content;
                     }
+                    Program.temporario = temp2;
+                    logger.Log($"Produto {produto.Nome} tem sub-produtos que são: {Program.temporario}");
+                    ParseStringParaProdutos(Program.temporario, produto);
+                    //wait 20 miliseconds  
+                    System.Threading.Thread.Sleep(20);
                 }
-            });
-            var thread2 = new Thread(() =>
+                
+            }
+            catch(Exception ex)
             {
-                for (int i = Nprodutos / 2; i < Nprodutos; i++)
+                logger.Log($"Erro ao separar produtos: {ex.Message}");
+            }  
+        }
+            public void separarProdutos()
+            {
+                var logger = new Logger("main");
+                logger.Log("Separando produtos...");
+                List<List<int>> listdiv = Program.listaProdutos.SplitList(13);
+                List<Thread> threads = new List<Thread>();
+                foreach (List<int> list in listdiv)
                 {
-                    var produto = Program.listaProdutos[i];
-                    try
+                    var thread = new Thread(() =>
                     {
-                        var chatCompletionsOptions = new ChatCompletionsOptions()
+                        var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
+                        foreach (var produto in list)
                         {
-                            Messages =
-                {
-                new ChatMessage(ChatRole.User,$"Descrição do Produto: {produto.Descricao}\r\n\r\nA pergunta é: Existem vários produtos à venda nesta descrição,responde apenas com sim ou não?\r\n\r\nResposta: " ),
-              }
-                        };
-                        var response = openAIClient2.GetChatCompletions(
-                             deploymentOrModelName: "gpt-3.5-turbo",
-                             chatCompletionsOptions
-                          );
-                        string temp1 = "";
-                        foreach (var choice in response.Value.Choices)
-                        {
-                            temp1 += choice.Message.Content;
+                            GPTseparar(produto, openAIClient, logger);
                         }
-                        produto.Categoria = temp1;
-                        if (temp1.ToLower().Contains("sim"))
-                        {
-                            var chatCompletionsOptions2 = new ChatCompletionsOptions()
-                            {
-                                Messages =
-                {
-                new ChatMessage(ChatRole.User,$"Descrição do Produto: {produto.Descricao}\r\nUsando a descrição de produto acima extrai todos os sub-produtos correspondetes a este produto no formato seguinte:\r\nNome: Nome do produto\r\nValor: Valor do produto se diponível\r\nDescrição: Pequena descrição se possível\r\n----\r\nNome: xxxx\r\netc...\""),
-              }
-                            };
-                            var response2 = openAIClient2.GetChatCompletions(
-                                 deploymentOrModelName: "gpt-3.5-turbo",
-                                 chatCompletionsOptions2
-                              );
-                            string temp2 = "";
-                            foreach (var choice in response2.Value.Choices)
-                            {
-                                temp2 += choice.Message.Content;
-                            }
-                            Program.temporario = temp2;
-                            logger.Log($"Produto {produto.Nome} tem sub-produtos que são: {Program.temporario}");
-                            ParseStringParaProdutos(Program.temporario, produto);
-                            //wait 20 miliseconds  
-                            System.Threading.Thread.Sleep(20);
-                        }
-                    }
-                    catch (System.AggregateException)
-                    {
-                        logger.Log("Erro ao separar produtos");
-                    }
+                    });
+                    thread.Start();
+                    threads.Add(thread);
                 }
-            });
-            thread.Start();
-            thread2.Start();
-            thread.Join();
-            thread2.Join();
-            Program.listaProdutos.AddRange(produto_GPT);
-            logger.Log($"Produtos separados {Program.listaProdutos.Count}");
+                foreach (var thread in threads)
+                {
+                    thread.Join();
+                }
+                logger.Log("Produtos separados com sucesso!");
+            }
         }
     }
-}
+
 
