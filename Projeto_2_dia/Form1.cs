@@ -253,5 +253,11 @@ namespace Projeto_2_dia
             thread.Start();
 
         }
+
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+            ChatGPT chatGPT = new ChatGPT();
+            chatGPT.Show();
+        }
     }
 }
