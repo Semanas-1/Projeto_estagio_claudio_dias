@@ -47,57 +47,38 @@ namespace Projeto_2_dia
             List<string> ids = new List<string>();
             var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
             List<string> TempP = DividePalavras(textBox1.Text);
-            using (var connection = new SQLiteConnection("Data Source=Basedados.db"))
+            var embeddingsOptions = new EmbeddingsOptions($"{message.Pergunta}");
+            var response = openAIClient.GetEmbeddings(
+                 deploymentOrModelName: "text-embedding-ada-002",
+                 embeddingsOptions
+              );
+            Embeddings tempEmbedings = response.Value;
+            foreach (var produtoEmb in Program.listaEmbeddings)
             {
-                connection.Open();
-                foreach (string palavra in TempP)
-                {
-                    string selectQuery = "SELECT * FROM Produtos WHERE instr(LOWER(Nome),LOWER(@Palavra)) > 0 OR instr(LOWER(Categoria),LOWER(@Palavra)) > 0 OR instr(LOWER(Localidade),LOWER(@Palavra)) > 0 OR instr(LOWER(Descricao),LOWER(@Palavra)) > 0";
-                    using (SQLiteCommand selectCommand = new SQLiteCommand(selectQuery, connection))
-                    {
-                        selectCommand.Parameters.AddWithValue("@Palavra", palavra);
-                        using (SQLiteDataReader reader = selectCommand.ExecuteReader())
-                        {
-
-                            while (reader.Read())
-                            {
-                                Produto produto = new Produto();
-                                produto.Id = reader.GetInt32(reader.GetOrdinal("Id")).ToString();
-                                ids.Add(produto.Id);
-                                if(ids.Contains(produto.Id))
-                                {
-                                    continue;
-                                }
-                                produto.Nome = reader.GetString(reader.GetOrdinal("Nome"));
-                                produto.Descricao = reader.GetString(reader.GetOrdinal("Descricao"));
-                                produto.Localizacao = reader.GetString(reader.GetOrdinal("Localidade"));
-                                produto.Preco = reader.GetString(reader.GetOrdinal("Preco"));
-                                produto.Categoria = reader.GetString(reader.GetOrdinal("Categoria"));
-                                ProdGPT.Add(produto);
-                            }
-                        }
-                    }
-                }
-                foreach (var produto in ProdGPT)
-                {
-                        Temp2 += $" {produto.Localizacao}, {produto.Descricao},  {produto.Categoria}, {produto.Preco}, {produto.Nome}";
-                }
-                message.Pergunta = textBox1.Text.Trim();
-                message.DatePergunta = DateTime.Now.ToString("h:mm:ss tt");
+                var produto = Program.listaProdutos_mostrar.Find(x => x.Id == produtoEmb.ProdutoId);
+                var similaridade=CosineSimilarity.CalculateAverageCosineSimilarity(
+                  tempEmbedings,
+                  produtoEmb.Embeddings
+                );
+                if (similaridade<0.81)
+                continue;
+                Temp2 +=$"{produto.Id}||{produto.Nome}||{produto.Preco}||{produto.Localizacao}||{similaridade}\r\n";
+            }
+            message.DatePergunta = DateTime.Now.ToString("h:mm:ss tt");
                 var chatCompletionsOptions = new ChatCompletionsOptions()
                 {
                     Messages =
-             {   
-                new ChatMessage (ChatRole.System, $"You are Cloud, You help the user find products based on the provided data base information.\r\n\r\nDatabase information:{Temp2}"),
+                {   
+                new ChatMessage (ChatRole.System, $"You are Cloud, You help the user find products based on the provided data base information.\r\n\r\nDatabase information:\r\nID || Nome || Descricao || Preço || Localidade|| similaridade\r\n{Temp2}"),
                 new ChatMessage(ChatRole.User,message.Pergunta ),
-              }
+                }
                 };
-                var response = openAIClient.GetChatCompletions(
+                var response2 = openAIClient.GetChatCompletions(
                      deploymentOrModelName: "gpt-3.5-turbo",
                      chatCompletionsOptions
                   );
                 string tempm = "";
-                foreach (var choice in response.Value.Choices)
+                foreach (var choice in response2.Value.Choices)
                 {
                     tempm += choice.Message.Content;
                 }
@@ -128,8 +109,9 @@ namespace Projeto_2_dia
                 richTextBox1.AppendText($"{tempv.Content}\r");
                 ProdGPT.Clear();
                 Temp2 = "";
-
+                cont++;
+                
             }
         }
     }
-}
+

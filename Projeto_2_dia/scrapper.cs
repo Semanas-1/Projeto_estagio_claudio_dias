@@ -20,6 +20,7 @@ using System.Security.Policy;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 using System.Diagnostics;
 using Microsoft.Extensions.Azure;
+using Azure.AI.OpenAI;
 
 namespace Projeto_2_dia
 {
@@ -310,6 +311,28 @@ namespace Projeto_2_dia
                     ProgressChanged?.Invoke(this, Program.cont2);
                 }
             }
+        }
+        public void CreateEmbedings()
+        {
+            Logger logger = new Logger("Embeddings");
+            var openAIClient = new OpenAIClient(GPTKey.OPENAI_KEY);
+            foreach (var produto in Program.listaProdutos_mostrar)
+            {
+                ProdutoEmbed produtoEmbed = new ProdutoEmbed();
+                var embeddingsOptions = new EmbeddingsOptions($"{produto.Nome} {produto.Descricao} {produto.Preco} - {produto.Localizacao}");
+
+                var response = openAIClient.GetEmbeddings(
+                     deploymentOrModelName: "text-embedding-ada-002",
+                     embeddingsOptions
+                  );
+                if (!response.HasValue)
+                    continue;
+                produtoEmbed.ProdutoId = produto.Id;
+                produtoEmbed.Embeddings = response.Value;
+                Program.listaEmbeddings.Add(produtoEmbed);
+                logger.Log($"Embeddings do produto {produto.Nome} guardados");
+            }
+            logger.Log($"Embeddings guardados");
         }
         public void load2()
         {

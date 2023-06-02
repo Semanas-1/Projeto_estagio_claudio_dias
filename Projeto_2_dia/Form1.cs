@@ -85,6 +85,7 @@ namespace Projeto_2_dia
         {
             scrape.load();
             scrape.load2();
+            scrape.CreateEmbedings();
             FlowLoad();
         }
 

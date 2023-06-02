@@ -19,6 +19,7 @@ namespace Projeto_2_dia
         public static string temporario = "";
         public static Queue<DBimg> dbImgQueue = new Queue<DBimg>();
         public static bool noMoreItems = false;
+        public static List<ProdutoEmbed>listaEmbeddings = new List<ProdutoEmbed>();
         // Logs
         public static List<Log> logs = new List<Log>();
         // Event listener for when a log is added
